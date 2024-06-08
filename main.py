@@ -25,7 +25,11 @@ class LogisticRegression:
         self.X = torch.cat((self.x0, self.x1), dim=0)
         self.y = torch.cat((torch.zeros(len(self.x0)), torch.ones(len(self.x1))), dim=0)
 
-  def generate_plot(self, w):
+
+  def model(self,w):
+        self.w = w 
+
+  def generate_plot(self):
         scatter_class_0 = go.Scatter(
             x=self.x0,
             y=torch.zeros(len(self.x0)),
@@ -40,20 +44,17 @@ class LogisticRegression:
             marker=dict(color='orange'),
             name='class 1'
         )
-
-        z = w * self.X
-        y_hat = torch.sigmoid(z)
         
         non_linear_line = go.Scatter(
             x=torch.linspace(-3, 3, 1000),
-            y=torch.sigmoid(w * torch.linspace(-3, 3, 1000)),
+            y=torch.sigmoid(self.w * torch.linspace(-3, 3, 1000)),
             mode='lines',
             line={'color': 'rgb(27,158,119)'},
             name='model'
         )
         layout = go.Layout(
             xaxis=dict(
-                range=[-1.5, 1.5],
+                range=[-3.1, 3.1],
                 title='X',
                 zeroline=True,
                 zerolinewidth=2,
@@ -74,7 +75,6 @@ class LogisticRegression:
 
 
 
-# data = LogisticRegression(lower_0=-3,upper_0=-1.5,sample_size_0=8,noise_0=0.2,lower_1=1,upper_1=2,sample_size_1=3,noise_1=0.4)
 #---------------------------------------
 # streamlit 
   
@@ -85,8 +85,13 @@ st.write('By : Hawar Dzaee')
 
 
 with st.sidebar:
+
+    st.subheader("Data Generation")
+    sample_size_0_val = st.slider("sample size Class 0:", min_value= 2, max_value=12, step=1, value= 3)
+    sample_size_1_val = st.slider("sample size Class 1:", min_value= 2, max_value=12, step=1, value= 3)
+
+
     st.subheader("Adjust the parameters to minimize the loss")
-    sample_size_1_val = st.slider("sample size 1:", min_value= 2, max_value=18, step=1, value= 3)
     w_val = st.slider("weight (w):", min_value=-4.0, max_value=18.0, step=0.1, value= -3.5)
 
 
@@ -96,12 +101,12 @@ container = st.container()
 with container:
  
 
-    # Create two columns with different widths
     col1, col2 = st.columns([3,3])
 
-    # Plot figure_1 in the first column
     with col1:
-        data = LogisticRegression(lower_0=-3,upper_0=-1.5,sample_size_0=8,noise_0=0.2,lower_1=1,upper_1=2, sample_size_1=sample_size_1_val, noise_1=0.4)
-        figure_1 = data.generate_plot(w_val)
-        st.plotly_chart(figure_1, use_container_width=True)  # Change aspect ratio to 1.0
+        data = LogisticRegression(lower_0 = -3,upper_0 = -1.5, sample_size_0 = sample_size_0_val,noise_0 = 0.2,
+                                  lower_1 = 1, upper_1 = 2, sample_size_1 = sample_size_1_val, noise_1 = 0.4)
+        data.model(w_val)
+        figure_1 = data.generate_plot()
+        st.plotly_chart(figure_1, use_container_width=True)  
  
