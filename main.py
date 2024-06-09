@@ -50,6 +50,12 @@ class LogisticRegression:
 
         return secret_weight,L
     
+    def loss_per_class(self):
+        loss_class_0 = torch.mean(-torch.log(1-torch.sigmoid(self.w * self.x0)))
+        loss_class_1 =  torch.mean(-torch.log(torch.sigmoid(self.w * self.x1)))
+
+        return loss_class_0,loss_class_1
+    
 
     def generate_plot(self):
         scatter_class_0 = go.Scatter(
@@ -185,11 +191,18 @@ with container:
                                   lower_1 = 1, upper_1 = 2, sample_size_1 = sample_size_1_val, noise_1 = 1.4)
         data.model(w_val)
         figure_1 = data.generate_plot()
-        st.plotly_chart(figure_1, use_container_width=True)  
+        st.plotly_chart(figure_1, use_container_width=True)
+
+        st.latex(r'''\hat{{y}} = \frac{1}{1 + e^{-(\color{green}w\color{black}X)}}''')
+        st.latex(fr'''\hat{{y}} = \frac{{1}}{{1 + e^{{-(\color{{green}}{{{w_val}}}\color{{black}}X)}}}}''')  
     
 
     secret_weight, L = data.model(w_val)
+    loss_class_0,loss_class_1 = data.loss_per_class()
 
     with col2:
        figure_2 = data.loss_landscape(secret_weight,L)
        st.plotly_chart(figure_2,use_container_width=True)
+       st.latex(r"""L = -\frac{1}{N} \sum_{i=1}^{N} \left[ y_i \log(\hat{y}_i) + (1 - y_i) \log(1 - \hat{y}_i) \right]""")
+       st.latex(rf"""L_{{\text{{class 0}}}} = \textcolor{{purple}}{{{loss_class_0:.4f}}}  \qquad L_{{\text{{class 1}}}} = \textcolor{{orange}}{{{loss_class_1:.4f}}}""")
+    #    st.latex(rf"""L_{{\text{{total}}}} = \textcolor{{red}}{{{loss:.4f}}}""")
