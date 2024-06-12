@@ -3,7 +3,8 @@ import torch.nn as nn
 import streamlit as st
 import numpy as np 
 import plotly.graph_objects as go 
-
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt 
 
 #-------------
 class LogisticRegression:
@@ -50,12 +51,29 @@ class LogisticRegression:
 
         return secret_weight,L
     
+    # loss per each class 
     def loss_per_class(self):
         loss_class_0 = torch.mean(-torch.log(1-torch.sigmoid(self.w * self.x0)))
         loss_class_1 =  torch.mean(-torch.log(torch.sigmoid(self.w * self.x1)))
         loss_class_0_and_1 = loss_class_0 + loss_class_1
 
         return loss_class_0,loss_class_1,loss_class_0_and_1
+    
+    # confusion matrix 
+    def make_predictions(self,threeshold=0.5):
+        with torch.no_grad():
+            prob = torch.sigmoid(self.w * self.X)
+            pred = (prob>threeshold).float()
+            cm = confusion_matrix(self.y,pred,labels=[1,0])
+            disp = ConfusionMatrixDisplay(cm,display_labels=['orange','purple'])
+
+            fig, ax = plt.subplots()
+            disp.plot(ax=ax)
+
+        return fig
+
+
+
     
 
     def generate_plot(self):
@@ -209,3 +227,9 @@ with container:
        st.latex(r"""L = -\frac{1}{N} \sum_{i=1}^{N} \left[ y_i \log(\hat{y}_i) + (1 - y_i) \log(1 - \hat{y}_i) \right]""")
        st.latex(rf"""L_{{\text{{class 0}}}} = \textcolor{{purple}}{{{loss_class_0:.4f}}}  \qquad L_{{\text{{class 1}}}} = \textcolor{{orange}}{{{loss_class_1:.4f}}}""")
        st.latex(rf"""L_{{\text{{total}}}} = \textcolor{{red}}{{{loss_class_0_and_1:.4f}}}""")
+       st.write('---------------')
+
+    
+       fig = data.make_predictions()
+       st.pyplot(fig)
+
