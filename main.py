@@ -53,8 +53,9 @@ class LogisticRegression:
     def loss_per_class(self):
         loss_class_0 = torch.mean(-torch.log(1-torch.sigmoid(self.w * self.x0)))
         loss_class_1 =  torch.mean(-torch.log(torch.sigmoid(self.w * self.x1)))
+        loss_class_0_and_1 = loss_class_0 + loss_class_1
 
-        return loss_class_0,loss_class_1
+        return loss_class_0,loss_class_1,loss_class_0_and_1
     
 
     def generate_plot(self):
@@ -173,6 +174,8 @@ with st.sidebar:
     sample_size_0_val = st.slider("sample size Class 0:", min_value= 2, max_value=12, step=1, value= 3)
     sample_size_1_val = st.slider("sample size Class 1:", min_value= 2, max_value=12, step=1, value= 3)
 
+    Noise = st.slider('Noise',min_value = 0.0, max_value = 1.0, step = 0.1, value = 0.2)
+
 
     st.subheader("Adjust the parameters to minimize the loss")
     w_val = st.slider("weight (w):", min_value=-4.0, max_value=18.0, step=0.1, value= -3.5)
@@ -187,8 +190,8 @@ with container:
     col1, col2 = st.columns([3,3])
 
     with col1:
-        data = LogisticRegression(lower_0 = -3,upper_0 = -1.5, sample_size_0 = sample_size_0_val,noise_0 = 1.2,
-                                  lower_1 = 1, upper_1 = 2, sample_size_1 = sample_size_1_val, noise_1 = 1.4)
+        data = LogisticRegression(lower_0 = -2,upper_0 = 0, sample_size_0 = sample_size_0_val,noise_0 = Noise,
+                                  lower_1 = 0, upper_1 = 2, sample_size_1 = sample_size_1_val, noise_1 = Noise)
         data.model(w_val)
         figure_1 = data.generate_plot()
         st.plotly_chart(figure_1, use_container_width=True)
@@ -198,11 +201,11 @@ with container:
     
 
     secret_weight, L = data.model(w_val)
-    loss_class_0,loss_class_1 = data.loss_per_class()
+    loss_class_0,loss_class_1,loss_class_0_and_1 = data.loss_per_class()
 
     with col2:
        figure_2 = data.loss_landscape(secret_weight,L)
        st.plotly_chart(figure_2,use_container_width=True)
        st.latex(r"""L = -\frac{1}{N} \sum_{i=1}^{N} \left[ y_i \log(\hat{y}_i) + (1 - y_i) \log(1 - \hat{y}_i) \right]""")
        st.latex(rf"""L_{{\text{{class 0}}}} = \textcolor{{purple}}{{{loss_class_0:.4f}}}  \qquad L_{{\text{{class 1}}}} = \textcolor{{orange}}{{{loss_class_1:.4f}}}""")
-    #    st.latex(rf"""L_{{\text{{total}}}} = \textcolor{{red}}{{{loss:.4f}}}""")
+       st.latex(rf"""L_{{\text{{total}}}} = \textcolor{{red}}{{{loss_class_0_and_1:.4f}}}""")
