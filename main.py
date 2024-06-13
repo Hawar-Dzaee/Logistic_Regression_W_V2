@@ -57,7 +57,7 @@ class LogisticRegression:
         loss_class_1 =  torch.mean(-torch.log(torch.sigmoid(self.w * self.x1)))
         loss_class_0_and_1 = loss_class_0 + loss_class_1
 
-        return loss_class_0,loss_class_1,loss_class_0_and_1
+        return loss_class_0,loss_class_1,loss_class_0_and_1/2
     
     # confusion matrix 
     def make_predictions(self,threeshold=0.5):
