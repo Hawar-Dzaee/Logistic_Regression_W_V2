@@ -1,1 +1,1 @@
-# Logistic_Regression_W_B
+# Logistic_Regression_W_V2
