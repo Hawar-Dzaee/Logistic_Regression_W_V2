@@ -8,4 +8,3 @@ and how does is that relavent to step function?
 
 4- what does maximum noise mean [Noise] ? how can you interpret it? try to find the optimal weight when Noise =1 ? what's your conclusion ? 
 
-5- 

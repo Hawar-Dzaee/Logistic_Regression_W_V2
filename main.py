@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 class LogisticRegression:
 
 
-    def __init__(self ,lower_0, upper_0, sample_size_0, noise_0,lower_1, upper_1, sample_size_1, noise_1,w):
+    def __init__(self ,lower_0, upper_0, sample_size_0, noise_0,lower_1, upper_1, sample_size_1, noise_1,w,threeshold):
 
         # Parameters
         self.lower_0 = lower_0
@@ -22,6 +22,7 @@ class LogisticRegression:
         self.sample_size_1 = sample_size_1
         self.noise_1 = noise_1
         self.w = w
+        self.threeshold = threeshold
 
         # made by attributes
         self.x0 = torch.linspace(lower_0, upper_0, sample_size_0) + torch.tensor([noise_0])
@@ -33,10 +34,41 @@ class LogisticRegression:
         self.inter_and_extrapolation = torch.linspace(-3,3,1000)
         self.possible_weights = torch.linspace(-5,25,100)
         self.loss_fn = nn.BCEWithLogitsLoss()
+#---------------------------------------------------------------
+        
+# Math for loss_landscape, loss for classes & confusion matrix 
 
+    def Loss(self):
+        L = []
 
+        for weight in self.possible_weights:
+            z = weight * self.X
+            loss = self.loss_fn(z,self.y)
+            L.append(loss)
 
+        return torch.as_tensor(L)
     
+    # l_class_0 , l_class_1 , l_class_total 
+    def loss_per_class(self):
+        loss_class_0 = torch.mean(-torch.log(1-torch.sigmoid(self.w * self.x0)))
+        loss_class_1 =  torch.mean(-torch.log(torch.sigmoid(self.w * self.x1)))
+        loss_class_0_and_1 = (loss_class_0 + loss_class_1)/2
+
+        return loss_class_0,loss_class_1,loss_class_0_and_1
+    
+    # confusion matrix 
+    def make_predictions(self):
+        with torch.no_grad():
+            prob = torch.sigmoid(self.w * self.X)
+            pred = (prob>self.threeshold ).float()
+            cm = confusion_matrix(self.y,pred,labels=[1,0])
+            disp = ConfusionMatrixDisplay(cm,display_labels=['orange','purple'])
+            
+            disp.plot()
+
+        return plt.gcf()
+#---------------------------------------------------------------
+
     # Data points, sigmoid curve
     def generate_plot(self):
         scatter_class_0 = go.Scatter(
@@ -63,6 +95,15 @@ class LogisticRegression:
         )
 
 
+        threeshold_line = go.Scatter(
+            x = torch.linspace(-10,10,21),
+            y = torch.full((21,), self.threeshold),
+            mode = 'lines',
+            line = dict(dash='dash'),
+            name = 'Threeshold Line'
+        )
+
+
         layout = go.Layout(
             xaxis=dict(
                 range=[-3.1, 3.1],
@@ -81,45 +122,11 @@ class LogisticRegression:
             height=500,
             width=2600
         )
-        figure = go.Figure(data=[scatter_class_0, scatter_class_1, non_linear_line], layout=layout)
+        figure = go.Figure(data=[scatter_class_0, scatter_class_1, non_linear_line,threeshold_line], layout=layout)
         return figure
     
 #-----------------------------------
-# Math for loss_landscape, loss for classes & confusion matrix 
 
-    def Loss(self):
-        L = []
-
-        for weight in self.possible_weights:
-            z = weight * self.X
-            loss = self.loss_fn(z,self.y)
-            L.append(loss)
-
-        L = torch.as_tensor(L)
-        secret_weight = self.possible_weights[torch.argmin(L)]
-
-        return L
-    
-    # l_class_0 , l_class_1 , l_class_total 
-    def loss_per_class(self):
-        loss_class_0 = torch.mean(-torch.log(1-torch.sigmoid(self.w * self.x0)))
-        loss_class_1 =  torch.mean(-torch.log(torch.sigmoid(self.w * self.x1)))
-        loss_class_0_and_1 = (loss_class_0 + loss_class_1)/2
-
-        return loss_class_0,loss_class_1,loss_class_0_and_1
-    
-    # confusion matrix 
-    def make_predictions(self,threeshold=0.5):
-        with torch.no_grad():
-            prob = torch.sigmoid(self.w * self.X)
-            pred = (prob>threeshold).float()
-            cm = confusion_matrix(self.y,pred,labels=[1,0])
-            disp = ConfusionMatrixDisplay(cm,display_labels=['orange','purple'])
-            
-            disp.plot()
-
-        return plt.gcf()
-#-------------------------------------
 
     def loss_landscape(self,L):
         
@@ -187,14 +194,14 @@ st.write('By : Hawar Dzaee')
 with st.sidebar:
 
     st.subheader("Data Generation")
-    sample_size_0_val = st.slider("sample size Class 0:", min_value= 2, max_value=12, step=1, value= 3)
-    sample_size_1_val = st.slider("sample size Class 1:", min_value= 2, max_value=12, step=1, value= 3) 
+    sample_size_0_val = st.slider("sample size Class 0:", min_value= 2, max_value=12, step=1, value= 7)
+    sample_size_1_val = st.slider("sample size Class 1:", min_value= 2, max_value=12, step=1, value= 9) 
 
     Noise = st.slider('Noise',min_value = 0.0, max_value = 1.0, step = 0.1, value = 0.2)
 
 
-    st.subheader("Adjust the parameters to minimize the loss")
-    w_val = st.slider("weight (w):", min_value=-4.0, max_value=18.0, step=0.1, value= -3.5) # first and all the widgets above 
+    st.subheader("Adjust the parameter(s) to minimize the loss")
+    w_val = st.slider("weight (w):", min_value=-4.0, max_value=18.0, step=0.1, value= 1.1) # first and all the widgets above 
 
 
 container = st.container()
@@ -208,7 +215,7 @@ with container:
     with col1:
 
         data = LogisticRegression(lower_0 = -2,upper_0 = 0, sample_size_0 = sample_size_0_val,noise_0 = Noise,
-                                  lower_1 = 0, upper_1 = 2, sample_size_1 = sample_size_1_val, noise_1 = Noise,w = w_val) #second
+                                  lower_1 = 0, upper_1 = 2, sample_size_1 = sample_size_1_val, noise_1 = Noise,w = w_val,threeshold=0.5) #second
         data.Loss() # third
         figure_1 = data.generate_plot() # fourth
         st.plotly_chart(figure_1, use_container_width=True)
@@ -227,8 +234,22 @@ with container:
        st.latex(rf"""L_{{\text{{class 0}}}} = \textcolor{{purple}}{{{loss_class_0:.4f}}}  \qquad L_{{\text{{class 1}}}} = \textcolor{{orange}}{{{loss_class_1:.4f}}}""")
        st.latex(rf"""L_{{\text{{total}}}} = \textcolor{{red}}{{{loss_class_0_and_1:.4f}}}""")
        st.write('---------------')
-
-    
+       
+       st.subheader('Confusion Matrix on Training Data')
        fig = data.make_predictions() #eighth
        st.pyplot(fig)
 
+
+st.write('--------------------------')
+
+
+st.header('Food For Thought')
+
+st.write('''
+1. In a real-world scenario, which widget do you have control over?
+
+2. Make the dataset completely separable [Noise = 0]. Is the loss function still convex? Why or why not?
+
+3. When there is no noise [Noise = 0], what is the weight that minimizes the loss function? How is that relevant to the step function?
+
+4. What does maximum noise [Noise = 1] mean? How can you interpret it? Try to find the optimal weight when Noise = 1. What’s your conclusion? ''')
