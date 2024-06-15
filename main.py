@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn 
 import streamlit as st
 import numpy as np 
+import pandas as pd
 import plotly.graph_objects as go 
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt 
@@ -10,7 +11,7 @@ import matplotlib.pyplot as plt
 class LogisticRegression:
 
 
-    def __init__(self ,lower_0, upper_0, sample_size_0, noise_0,lower_1, upper_1, sample_size_1, noise_1,w,threeshold):
+    def __init__(self ,lower_0, upper_0, sample_size_0, noise_0,lower_1, upper_1, sample_size_1, noise_1,w,threshold):
 
         # Parameters
         self.lower_0 = lower_0
@@ -22,7 +23,7 @@ class LogisticRegression:
         self.sample_size_1 = sample_size_1
         self.noise_1 = noise_1
         self.w = w
-        self.threeshold = threeshold
+        self.threshold = threshold
 
         # made by attributes
         self.x0 = torch.linspace(lower_0, upper_0, sample_size_0) + torch.tensor([noise_0])
@@ -60,7 +61,7 @@ class LogisticRegression:
     def make_predictions(self):
         with torch.no_grad():
             prob = torch.sigmoid(self.w * self.X)
-            pred = (prob>self.threeshold ).float()
+            pred = (prob>self.threshold ).float()
             cm = confusion_matrix(self.y,pred,labels=[1,0])
             disp = ConfusionMatrixDisplay(cm,display_labels=['orange','purple'])
             
@@ -95,12 +96,12 @@ class LogisticRegression:
         )
 
 
-        threeshold_line = go.Scatter(
+        threshold_line = go.Scatter(
             x = torch.linspace(-10,10,21),
-            y = torch.full((21,), self.threeshold),
+            y = torch.full((21,), self.threshold),
             mode = 'lines',
             line = dict(dash='dash'),
-            name = 'Threeshold Line'
+            name = 'Threshold Line'
         )
 
 
@@ -122,7 +123,7 @@ class LogisticRegression:
             height=500,
             width=2600
         )
-        figure = go.Figure(data=[scatter_class_0, scatter_class_1, non_linear_line,threeshold_line], layout=layout)
+        figure = go.Figure(data=[scatter_class_0, scatter_class_1, non_linear_line,threshold_line], layout=layout)
         return figure
     
 #-----------------------------------
@@ -187,7 +188,7 @@ class LogisticRegression:
   
 
 st.set_page_config(layout='wide')
-st.title("Logistic Regression : Weight & Bias")
+st.title("Logistic Regression : Weight")
 st.write('By : Hawar Dzaee')
 
 
@@ -196,8 +197,10 @@ with st.sidebar:
     st.subheader("Data Generation")
     sample_size_0_val = st.slider("sample size Class 0:", min_value= 2, max_value=12, step=1, value= 7)
     sample_size_1_val = st.slider("sample size Class 1:", min_value= 2, max_value=12, step=1, value= 9) 
-
     Noise = st.slider('Noise',min_value = 0.0, max_value = 1.0, step = 0.1, value = 0.2)
+
+    st.subheader('Threshold Selection')
+    threshold_val = st.slider('threshold',min_value=0.05,max_value=0.99,step=0.05,value=0.5)
 
 
     st.subheader("Adjust the parameter(s) to minimize the loss")
@@ -215,14 +218,26 @@ with container:
     with col1:
 
         data = LogisticRegression(lower_0 = -2,upper_0 = 0, sample_size_0 = sample_size_0_val,noise_0 = Noise,
-                                  lower_1 = 0, upper_1 = 2, sample_size_1 = sample_size_1_val, noise_1 = Noise,w = w_val,threeshold=0.5) #second
+                                  lower_1 = 0, upper_1 = 2, sample_size_1 = sample_size_1_val, noise_1 = Noise,w = w_val,threshold=threshold_val) #second
         data.Loss() # third
         figure_1 = data.generate_plot() # fourth
         st.plotly_chart(figure_1, use_container_width=True)
 
         st.latex(r'''\hat{{y}} = \frac{1}{1 + e^{-(\color{green}w\color{black}X)}}''')
         st.latex(fr'''\hat{{y}} = \frac{{1}}{{1 + e^{{-(\color{{green}}{{{w_val}}}\color{{black}}X)}}}}''')  
-    
+
+        prob = (torch.sigmoid(data.w * data.X)).tolist()
+        prob = [round(i,4) for i in prob]
+        
+        df = pd.DataFrame({'y\u0302':prob,
+                            'y':data.y})
+
+
+        with st.expander("sigmoid outputs and their corresponding ground truth"):
+            st.write(df)
+
+        st.write('-------------')
+            
 
     L = data.Loss() # fifth
     loss_class_0,loss_class_1,loss_class_0_and_1 = data.loss_per_class() # sixth
@@ -235,7 +250,7 @@ with container:
        st.latex(rf"""L_{{\text{{total}}}} = \textcolor{{red}}{{{loss_class_0_and_1:.4f}}}""")
        st.write('---------------')
        
-       st.subheader('Confusion Matrix on Training Data')
+       st.subheader('Confusion Matrix On Training Data')
        fig = data.make_predictions() #eighth
        st.pyplot(fig)
 
@@ -252,4 +267,21 @@ st.write('''
 
 3. When there is no noise [Noise = 0], what is the weight that minimizes the loss function? How is that relevant to the step function?
 
-4. What does maximum noise [Noise = 1] mean? How can you interpret it? Try to find the optimal weight when Noise = 1. What’s your conclusion? ''')
+4. What does maximum noise [Noise = 1] mean? How can you interpret it? Try to find the optimal weight when Noise = 1. What’s your conclusion? 
+         
+5. Does the threshold affect the loss function? Why or why not? What about the confusion matrix? Why is that?''')
+
+
+
+
+# Add LinkedIn and GitHub links
+st.write("---")
+st.write("Connect with me:")
+col1, col2 = st.columns(2)
+linkedIn_icon_url = 'https://img.icons8.com/fluent/24/000000/linkedin.png'
+github_icon_url   =  'https://img.icons8.com/fluent/24/000000/github.png'
+with col1:
+    st.markdown(f"[![LinkedIn]({linkedIn_icon_url})](https://www.linkedin.com/in/hawardzaee/)")
+with col2:
+    st.markdown(f"[![GitHub]({github_icon_url})](https://github.com/your_github_username/)")
+
