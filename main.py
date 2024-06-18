@@ -274,14 +274,30 @@ st.write('''
 
 
 
-# Add LinkedIn and GitHub links
+
+
 st.write("---")
 st.write("Connect with me:")
-col1, col2 = st.columns(2)
-linkedIn_icon_url = 'https://img.icons8.com/fluent/24/000000/linkedin.png'
-github_icon_url   =  'https://img.icons8.com/fluent/24/000000/github.png'
-with col1:
-    st.markdown(f"[![LinkedIn]({linkedIn_icon_url})](https://www.linkedin.com/in/hawardzaee/)")
-with col2:
-    st.markdown(f"[![GitHub]({github_icon_url})](https://github.com/your_github_username/)")
+
+linkedIn_icon_url = 'https://img.icons8.com/fluent/48/000000/linkedin.png'
+github_icon_url = 'https://img.icons8.com/fluent/48/000000/github.png'
+
+html_code = f"""
+<div style="display: flex; justify-content: center; align-items: center;">
+    <a href="https://www.linkedin.com/in/hawardzaee/" style="margin-right: 10px;">
+        <img src="{linkedIn_icon_url}" alt="LinkedIn" style="height: 48px; width: 48px;">
+    </a>
+    <a href="https://github.com/Hawar-Dzaee" style="margin-left: 10px;">
+        <img src="{github_icon_url}" alt="GitHub" style="height: 48px; width: 48px;">
+    </a>
+</div>
+"""
+
+st.markdown(html_code, unsafe_allow_html=True)
+
+
+
+
+
+
 
