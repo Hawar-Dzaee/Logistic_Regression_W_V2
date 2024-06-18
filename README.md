@@ -11,11 +11,13 @@ This web application visualizes a logistic regression model with one feature and
 
 * Dataset Generation using widgets : you can select sample number of each class, and add noise to it.
 
+* Threshold Select : you can select the decision boundary between class orange and class purple.
+
 * Interactive Widgets: Adjust weight (w) in real-time and see the effect on the loss function and  sigmoid curve.
 
 
 * Equations Display: Displays the equations used in the plots:
-      sigmoid: Used in the first plot.
+      sigmoid: Used in the first plot, and the probability of each input(y_hat).
       Binary Cross Entropy (BCE) Equation: Used in the second plot.
       Confusion matrix: Third plor. 
 
@@ -70,10 +72,10 @@ Once the application is running, you will see three plots:
   * Confusion matrix for orange & purple classes. 
 
 
-![Alt text](<Screen Shot 2024-06-14 at 5.57.49 PM.png>)
+![Alt text](<Screen Shot 2024-06-18 at 6.48.24 PM.png>)
 
+![Alt text](<Screen Shot 2024-06-18 at 6.48.45 PM.png>)
 
-![Alt text](<Screen Shot 2024-06-14 at 5.58.07 PM.png>)
 
 
 
